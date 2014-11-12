@@ -5,6 +5,8 @@ from os import path
 import numpy as np
 import matplotlib.pyplot as plt
 
+import libs.kmeans as KMeans
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -30,12 +32,20 @@ def main():
     if not path.isfile(args.training) or not path.isfile(args.file):
         parser.error('Invalid file path')
 
+    # Extract data from training file
     data, labels = read_file(args.training, args.dimension, True)
     dataStore = createDataStore(data, labels)
-    printDataStore(dataStore)
+
+    # Execute Expectation maximization algorithm to each label data
+    centroids = []
+    for k in dataStore:
+        members, cent = KMeans.kmeans(dataStore[k], 4, verbose=False)
+        centroids.extend(cent)
+    printDataStore(dataStore, centroids)
 
 
 def createDataStore(data, labels):
+    """Bin same labeled data in a dict"""
     dataStore = dict()
     for pos, val in enumerate(data):
         dataLabel = labels[pos]
@@ -49,6 +59,7 @@ def createDataStore(data, labels):
 
 
 def read_file(filepath, dimension, withlabel=False):
+    """Read file and return extracted data and labels"""
     with open(filepath) as f:
         csv_reader = csv.reader(f, delimiter=' ', skipinitialspace=True)
         labels = []
@@ -61,14 +72,19 @@ def read_file(filepath, dimension, withlabel=False):
     return data, labels
 
 
-def printDataStore(dataStore):
+def printDataStore(dataStore, centroids=None):
+    """Print the dataStore on a console"""
     colors = ['blue', 'green', 'magenta', 'cyan']
     for k in dataStore:
         values = dataStore[k]
         x = values[:, 0]
         y = values[:, 1]
-        plt.scatter(x, y, color=colors[0])
-        colors.pop(0)
+        c = colors.pop()
+        plt.scatter(x, y, color=c, alpha=0.3)
+
+    if centroids:
+        for c in centroids:
+            plt.scatter(c[0], c[1], color="red")
     plt.show()
 
 
