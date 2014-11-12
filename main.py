@@ -5,7 +5,7 @@ from os import path
 import numpy as np
 import matplotlib.pyplot as plt
 
-import libs.kmeans as KMeans
+import libs.em as EM
 
 
 def main():
@@ -39,8 +39,8 @@ def main():
     # Execute Expectation maximization algorithm to each label data
     centroids = []
     for k in dataStore:
-        members, cent = KMeans.kmeans(dataStore[k], 4, verbose=False)
-        centroids.extend(cent)
+        means, cov, weights = EM.initGaussianModel(dataStore[k], 4)
+        centroids.extend(means)
     printDataStore(dataStore, centroids)
 
 

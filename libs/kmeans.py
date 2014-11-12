@@ -2,6 +2,41 @@ import random
 import numpy as np
 
 
+def distanceWithPoint(data, point):
+    """
+    Return an array of distance between the point and each
+    cell of the array
+    """
+    nbSample, nbFeatures = data.shape
+    dist = np.zeros((nbSample, 1))
+
+    for i in range(nbSample):
+        tmp = 0.0
+        for j in range(nbFeatures):
+            tmp += (data[i][j] - point[j])**2
+        dist[i] = tmp
+    return np.sqrt(dist)
+
+
+def getIntraClusterVariance(data, members, cent):
+    """
+    Return the intra cluster variance
+
+    # PARAMS
+    npArray data:   data
+    int[] members:  membership number to each cluster
+    npArray cent:   list of centroids
+
+    # RETURN
+    int var: variance
+    """
+    variance = 0.0
+    for i in range(cent.shape[0]):
+        consideredSample = data[members.view(np.ndarray).ravel() == i, :]
+        variance += np.sum(distanceWithPoint(consideredSample, cent[i, :]))
+    return variance
+
+
 def findMembers(data, centroids):
     """
     Assign each data sample to the closest centroid
