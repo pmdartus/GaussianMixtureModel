@@ -37,11 +37,13 @@ def main():
     dataStore = createDataStore(data, labels)
 
     # Execute Expectation maximization algorithm to each label data
-    centroids = []
+    mixtureParams = []
     for k in dataStore:
         means, cov, weights = EM.initGaussianModel(dataStore[k], 4)
-        centroids.extend(means)
-    printDataStore(dataStore, centroids)
+        params = EM.run(dataStore[k], means, cov, weights, 4)
+        mixtureParams.append(params)
+    printDataStore(dataStore)
+    simulateData(mixtureParams)
 
 
 def createDataStore(data, labels):
@@ -82,11 +84,22 @@ def printDataStore(dataStore, centroids=None):
         c = colors.pop()
         plt.scatter(x, y, color=c, alpha=0.3)
 
-    if centroids:
+    if centroids is not None:
         for c in centroids:
             plt.scatter(c[0], c[1], color="red")
     plt.show()
 
+
+def simulateData(mixtureParams):
+    numPoints = 200
+    for params in mixtureParams:
+        nbClusters = len(params[2])
+        for i in range(nbClusters):
+            MU = params[0][i]
+            SIGMA = params[1][i]
+            pointSet = np.random.multivariate_normal(MU, SIGMA, numPoints)
+            plt.scatter(pointSet[:, 0], pointSet[:, 1])
+    plt.show()
 
 if __name__ == '__main__':
     main()
