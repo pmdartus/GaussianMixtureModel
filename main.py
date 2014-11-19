@@ -42,8 +42,13 @@ def main():
         means, cov, weights = EM.initGaussianModel(dataStore[k], 4)
         params = EM.run(dataStore[k], means, cov, weights, 4)
         mixtureParams.append(params)
-    printDataStore(dataStore)
-    simulateData(mixtureParams)
+
+    # Load unlabeled data
+    unLabeledData, testLabels = read_file(args.file, args.dimension, True)
+    p_Xn = np.zeros((len(unLabeledData), len(mixtureParams)))
+    for i, params in enumerate(mixtureParams):
+        p_Xn[:, i] = EM.evaluateMixtureProba(unLabeledData, params)
+    print np.argmax(p_Xn, axis=1)
 
 
 def createDataStore(data, labels):
