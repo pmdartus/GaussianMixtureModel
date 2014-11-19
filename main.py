@@ -48,7 +48,9 @@ def main():
     p_Xn = np.zeros((len(unLabeledData), len(mixtureParams)))
     for i, params in enumerate(mixtureParams):
         p_Xn[:, i] = EM.evaluateMixtureProba(unLabeledData, params)
-    print np.argmax(p_Xn, axis=1)
+    foundLabels = np.argmax(p_Xn, axis=1)
+    print testLabels
+    print foundLabels
 
 
 def createDataStore(data, labels):

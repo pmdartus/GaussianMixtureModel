@@ -66,7 +66,7 @@ def logmulnormpdf(X, MU, SIGMA):
     return ex + K
 
 
-def run(data, means, cov, weights, K, epsilon=1e-5, maxIter=10):
+def run(data, means, cov, weights, K, epsilon=1e-8, maxIter=20):
     """
     Run the EM algorithm and return the parameters when there is convergence
     or the max number of iteration hase been reached
