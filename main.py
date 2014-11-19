@@ -91,14 +91,17 @@ def printDataStore(dataStore, centroids=None):
 
 
 def simulateData(mixtureParams):
-    numPoints = 200
+    """Simulate data based on the params"""
+    numPoints = 2000
+    colors = ['blue', 'green', 'magenta', 'cyan']
     for params in mixtureParams:
         nbClusters = len(params[2])
+        c = colors.pop()
         for i in range(nbClusters):
             MU = params[0][i]
             SIGMA = params[1][i]
             pointSet = np.random.multivariate_normal(MU, SIGMA, numPoints)
-            plt.scatter(pointSet[:, 0], pointSet[:, 1])
+            plt.scatter(pointSet[:, 0], pointSet[:, 1], color=c, alpha=0.3)
     plt.show()
 
 if __name__ == '__main__':
