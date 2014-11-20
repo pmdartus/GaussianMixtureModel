@@ -55,3 +55,6 @@ target/
 
 #OSX files
 .DS_Store
+
+# Project artefacts
+data/output.txt
