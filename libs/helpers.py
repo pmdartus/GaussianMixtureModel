@@ -55,5 +55,4 @@ def write_file(filePath, data, labels):
         for i, sample in enumerate(data):
             sample = ["{0:.6f}".format(j) for j in data[i]]
             sample = " ".join(sample)
-            print sample
             f.write(sample + "  " + labels[i] + "\n")
