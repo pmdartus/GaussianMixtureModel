@@ -191,3 +191,50 @@ class GaussianMixtureModel(object):
         if self.means is None or self.cov is None:
             err = "Gaussian Mixture Model should be init before trained"
             raise Exception(err)
+
+    def gaussianPdf(self, data, i):
+        """Evaluate the pdf of data to belong for the ith component
+        of the mixture
+
+        # Params:
+        data (npArray)
+        i (Integer):
+            Represent the ith component of the mixture
+
+        # Return:
+        proba (npArray):
+            Proba for each data
+        """
+        MU = self.means
+        SIGMA = self.cov
+        mu = MU
+        x = np.array(data).T
+        if x.ndim == 1:
+            x = np.atleast_2d(x).T
+        sigma = np.atleast_2d(SIGMA)
+
+        N = len(MU)
+        ex1 = np.dot(np.linalg.inv(sigma), (x.T-mu).T)
+        ex = -0.5 * (x.T-mu).T * ex1
+        ex = np.sum(ex, axis=0)
+        K = 1 / np.sqrt(np.power(2*np.pi, N) * np.linalg.det(sigma))
+        return K*np.exp(ex)
+
+    def pdf(self, data):
+        """Evaluate the pdf of data to belong to the mixture
+
+        # Params:
+        data (npArray)
+
+        # Retrun:
+        proba (npArray)
+        """
+        proda = None
+        for i in range(self.K):
+            weight = self.weights[i]
+            probaToAdd = self.gaussianPdf(data) * weight
+            if proda is None:
+                proda = probaToAdd
+            else:
+                proda += probaToAdd
+        return proda
