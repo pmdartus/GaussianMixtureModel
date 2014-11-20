@@ -21,10 +21,11 @@ class GaussianMixtureModel(object):
     weights (npArray K):
         List of weights for each component of the mixture
     """
-    def __init__(self, trainingData, label):
+    def __init__(self, trainingData, label, verbose=False):
         self.trainingData = trainingData
         self.label = label
         self.d = trainingData.shape[1]
+        self.verbose = verbose
         self.means = None
         self.cov = None
         self.weights = None
@@ -43,6 +44,9 @@ class GaussianMixtureModel(object):
 
         Update self.K, self.means, self.cov and self.weights
         """
+        if self.verbose:
+            print "# INIT Gaussian Mixture Model", self.label
+
         # Check validity of parameters
         if K == 0 and guessK is False:
             raise Exception("Init with eather K set guessK to True")
@@ -78,6 +82,9 @@ class GaussianMixtureModel(object):
 
         Update self.K and self.means
         """
+        if self.verbose:
+            print "Guessing number of components of the mixture"
+
         ks = range(1, maxK)
         fs = np.zeros(len(ks))
         centroids = []
@@ -93,6 +100,9 @@ class GaussianMixtureModel(object):
         bestCentroids = centroids[fs.argmin()]
         self.K = len(bestCentroids)
         self.means = np.array(bestCentroids)
+
+        if self.verbose:
+            print ">> Number of components for", self.label, ":", self.K
 
     def calculateClusterCoherence(self, K, Skm1=0, maxIter=3):
         """
@@ -116,9 +126,7 @@ class GaussianMixtureModel(object):
                 Sk = trySk
                 means = centroids
 
-        if K == 1:
-            fs = 1
-        elif Skm1 == 0:
+        if K == 1 or Skm1 == 0:
             fs = 1
         else:
             fs = Sk / (alphaK(K, self.d) * Skm1)
@@ -129,6 +137,8 @@ class GaussianMixtureModel(object):
 
         Update self.means
         """
+        if self.verbose:
+            print "Use `Random` method to init model"
         self.means = random.sample(self.trainingData, self.K)
 
     def getInitKMeans(self, nbIter=10):
@@ -136,6 +146,8 @@ class GaussianMixtureModel(object):
 
         Update self.means
         """
+        if self.verbose:
+            print "Use `K-Means` method to init model"
         centerList = []
         bestIntraClusterVariance = None
         data = self.trainingData

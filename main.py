@@ -21,6 +21,7 @@ def main():
         help='File containing the data to be classified'
     )
     parser.add_argument(
+        '-d',
         '--dimension',
         help='Number of dimentional feature',
         required=False,
@@ -31,6 +32,12 @@ def main():
         help='Election method for initials means `Random` or `K-Means`',
         required=False,
         default="K-Means"
+    )
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        help='Make it speak',
+        action='store_true'
     )
 
     args = parser.parse_args()
@@ -45,7 +52,8 @@ def main():
     # Execute Expectation maximization algorithm to each label data
     models = []
     for label in dataStore.keys():
-        model = GaussianMixtureModel(dataStore[label], label)
+        model = GaussianMixtureModel(dataStore[label], label,
+                                     verbose=args.verbose)
         model.initModel(args.initMethod, guessK=True)
         models.append(model)
 
