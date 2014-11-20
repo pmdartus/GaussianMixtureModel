@@ -1,6 +1,8 @@
 import numpy as np
 import random
+
 import kmeans as KMeans
+import em as EM
 
 
 class GaussianMixtureModel(object):
@@ -73,7 +75,7 @@ class GaussianMixtureModel(object):
             cov.append(np.diag(np.ones(self.d)))
         self.cov = np.array(cov)
 
-    def estimateK(self, maxK=10):
+    def estimateK(self, maxK=5):
         """ Estimate the best K and the associated centroids
         This algorithm is based on the on the detection of any significant
         increasement in the intra cluster density
@@ -87,7 +89,7 @@ class GaussianMixtureModel(object):
         Update self.K and self.means
         """
         if self.verbose:
-            print "Guessing number of components of the mixture"
+            print "    Guessing number of components of the mixture"
 
         ks = range(1, maxK)
         fs = np.zeros(len(ks))
@@ -106,7 +108,7 @@ class GaussianMixtureModel(object):
         self.means = np.array(bestCentroids)
 
         if self.verbose:
-            print ">> Number of components for", self.label, ":", self.K
+            print "    Number of components for", self.label, ":", self.K
 
     def calculateClusterCoherence(self, K, Skm1=0, maxIter=3):
         """
@@ -158,7 +160,7 @@ class GaussianMixtureModel(object):
         Update self.means
         """
         if self.verbose:
-            print "Use `Random` method to init model"
+            print "    Use `Random` method to init model"
         self.means = random.sample(self.trainingData, self.K)
 
     def getInitKMeans(self, nbIter=10):
@@ -167,7 +169,7 @@ class GaussianMixtureModel(object):
         Update self.means
         """
         if self.verbose:
-            print "Use `K-Means` method to init model"
+            print "    Use `K-Means` method to init model"
         centerList = []
         bestIntraClusterVariance = None
         data = self.trainingData
@@ -186,11 +188,17 @@ class GaussianMixtureModel(object):
     def train(self):
         """ Train the model based on the provided data """
         if self.verbose:
-            print "# EM algorithm to train model", self.label
+            print "# TRAINING model", self.label
 
         if self.means is None or self.cov is None:
             err = "Gaussian Mixture Model should be init before trained"
             raise Exception(err)
+
+        params = EM.run(self.trainingData, self.means, self.cov,
+                        self.weights, self.K)
+        self.means = params[0]
+        self.cov = params[1]
+        self.weights = params[2]
 
     def gaussianPdf(self, data, i):
         """Evaluate the pdf of data to belong for the ith component
@@ -205,19 +213,14 @@ class GaussianMixtureModel(object):
         proba (npArray):
             Proba for each data
         """
-        MU = self.means
-        SIGMA = self.cov
-        mu = MU
+        mu = self.means[i]
         x = np.array(data).T
-        if x.ndim == 1:
-            x = np.atleast_2d(x).T
-        sigma = np.atleast_2d(SIGMA)
+        sigma = np.atleast_2d(self.cov[i])
 
-        N = len(MU)
         ex1 = np.dot(np.linalg.inv(sigma), (x.T-mu).T)
         ex = -0.5 * (x.T-mu).T * ex1
         ex = np.sum(ex, axis=0)
-        K = 1 / np.sqrt(np.power(2*np.pi, N) * np.linalg.det(sigma))
+        K = 1 / np.sqrt(np.power(2*np.pi, self.d) * np.linalg.det(sigma))
         return K*np.exp(ex)
 
     def pdf(self, data):
@@ -232,7 +235,7 @@ class GaussianMixtureModel(object):
         proda = None
         for i in range(self.K):
             weight = self.weights[i]
-            probaToAdd = self.gaussianPdf(data) * weight
+            probaToAdd = self.gaussianPdf(data, i) * weight
             if proda is None:
                 proda = probaToAdd
             else:

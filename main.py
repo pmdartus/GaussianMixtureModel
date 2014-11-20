@@ -21,6 +21,10 @@ def main():
         help='File containing the data to be classified'
     )
     parser.add_argument(
+        'output',
+        help='File containing the labeled data'
+    )
+    parser.add_argument(
         '-d',
         '--dimension',
         help='Number of dimentional feature',
@@ -54,12 +58,25 @@ def main():
     for label in dataStore.keys():
         model = GaussianMixtureModel(dataStore[label], label,
                                      verbose=args.verbose)
-        model.initModel(args.initMethod, guessK=True)
+        model.initModel(args.initMethod, K=4)
+        model.train()
         models.append(model)
+        if args.verbose:
+            print "======================== \n"
+
+    # Load unlabeled data
+    data, expectedLabels = read_file(args.file, args.dimension, True)
+    labels = affectLabelsToData(data, models)
+    print labels
 
 
 def createDataStore(data, labels):
-    """Bin same labeled data in a dict"""
+    """Bin same labeled data in a dict and return it
+
+    # Params
+    data(Array)
+    labels(Array)
+    """
     dataStore = dict()
     for pos, val in enumerate(data):
         dataLabel = labels[pos]
@@ -73,7 +90,22 @@ def createDataStore(data, labels):
 
 
 def read_file(filepath, dimension, withlabel=False):
-    """Read file and return extracted data and labels"""
+    """ Read file and return extracted data and labels
+
+    # Params
+    filepath (String):
+        Relative path to the data file
+    dimension (Integer):
+        Number of dimension to extract from the file
+    withlabel (Boolean) optional default=False:
+        Extract the labels for each sample
+
+    # Return
+    data (Array nb*dimension):
+        List of data sample
+    labels (Array nb):
+        list of labels for each sample
+    """
     with open(filepath) as f:
         csv_reader = csv.reader(f, delimiter=' ', skipinitialspace=True)
         labels = []
@@ -86,35 +118,20 @@ def read_file(filepath, dimension, withlabel=False):
     return data, labels
 
 
-def printDataStore(dataStore, centroids=None):
-    """Print the dataStore on a console"""
-    colors = ['blue', 'green', 'magenta', 'cyan']
-    for k in dataStore:
-        values = dataStore[k]
-        x = values[:, 0]
-        y = values[:, 1]
-        c = colors.pop()
-        plt.scatter(x, y, color=c, alpha=0.3)
+def affectLabelsToData(data, models):
+    """
+    Return the list labels for each samples based on the provided model
 
-    if centroids is not None:
-        for c in centroids:
-            plt.scatter(c[0], c[1], color="red")
-    plt.show()
+    # Params
+    data (Array)
+    models (Array GaussianMixtureModel)
+    """
+    p_Xn = np.zeros((len(data), len(models)))
+    for i, trainnedModel in enumerate(models):
+        p_Xn[:, i] = trainnedModel.pdf(data)
+    bestModel = np.argmax(p_Xn, axis=1)
+    return [models[i].label for i in bestModel]
 
-
-def simulateData(mixtureParams):
-    """Simulate data based on the params"""
-    numPoints = 2000
-    colors = ['blue', 'green', 'magenta', 'cyan']
-    for params in mixtureParams:
-        nbClusters = len(params[2])
-        c = colors.pop()
-        for i in range(nbClusters):
-            MU = params[0][i]
-            SIGMA = params[1][i]
-            pointSet = np.random.multivariate_normal(MU, SIGMA, numPoints)
-            plt.scatter(pointSet[:, 0], pointSet[:, 1], color=c, alpha=0.3)
-    plt.show()
 
 if __name__ == '__main__':
     main()
