@@ -5,7 +5,7 @@ from os import path
 import numpy as np
 import matplotlib.pyplot as plt
 
-import libs.em as EM
+from libs.gmm import GaussianMixtureModel
 
 
 def main():
@@ -14,17 +14,23 @@ def main():
     )
     parser.add_argument(
         'training',
-        help='file containing the training data'
+        help='File containing the training data'
     )
     parser.add_argument(
         'file',
-        help='file containing the data to be classified'
+        help='File containing the data to be classified'
     )
     parser.add_argument(
         '--dimension',
-        help='number of dimentional feature',
+        help='Number of dimentional feature',
         required=False,
         default=2
+    )
+    parser.add_argument(
+        '--initMethod',
+        help='Election method for initials means `Random` or `K-Means`',
+        required=False,
+        default="K-Means"
     )
 
     args = parser.parse_args()
@@ -37,20 +43,11 @@ def main():
     dataStore = createDataStore(data, labels)
 
     # Execute Expectation maximization algorithm to each label data
-    mixtureParams = []
-    for k in dataStore:
-        means, cov, weights = EM.initGaussianModel(dataStore[k], 4)
-        params = EM.run(dataStore[k], means, cov, weights, 4)
-        mixtureParams.append(params)
-
-    # Load unlabeled data
-    unLabeledData, testLabels = read_file(args.file, args.dimension, True)
-    p_Xn = np.zeros((len(unLabeledData), len(mixtureParams)))
-    for i, params in enumerate(mixtureParams):
-        p_Xn[:, i] = EM.evaluateMixtureProba(unLabeledData, params)
-    foundLabels = np.argmax(p_Xn, axis=1)
-    print testLabels
-    print foundLabels
+    models = []
+    for label in dataStore.keys():
+        model = GaussianMixtureModel(dataStore[label], label)
+        model.initModel(args.initMethod, guessK=True)
+        models.append(model)
 
 
 def createDataStore(data, labels):
