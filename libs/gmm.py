@@ -80,6 +80,10 @@ class GaussianMixtureModel(object):
 
         http://www.ee.columbia.edu/~dpwe/papers/PhamDN05-kmeans.pdf
 
+        # Params:
+        maxK (Integer) optional:
+            Max number of possible clusters
+
         Update self.K and self.means
         """
         if self.verbose:
@@ -107,6 +111,22 @@ class GaussianMixtureModel(object):
     def calculateClusterCoherence(self, K, Skm1=0, maxIter=3):
         """
         Return the result of the f(K) function with associated means
+
+        # Params
+        K (Integer):
+            Considered number of different clusters
+        SKm1 (Integer) optional:
+            Previous intra cluster variance
+        maxIter (Integer) optional default=3:
+            Number of iteration to select best K-Means partition
+
+        # Return
+        fs (Integer):
+            Evluation of the function f(K)
+        Sk (Integer):
+            Intra cluster variance for K clusters
+        means (npArray K*d):
+            Generated means via K-Means
         """
 
         def alphaK(k, Nd):
@@ -130,7 +150,7 @@ class GaussianMixtureModel(object):
             fs = 1
         else:
             fs = Sk / (alphaK(K, self.d) * Skm1)
-        return fs, Sk, means
+        return fs, Sk, np.array(means)
 
     def getRandomInitMeans(self):
         """ Draw K random sample as initial means for the EM algo
@@ -165,6 +185,9 @@ class GaussianMixtureModel(object):
 
     def train(self):
         """ Train the model based on the provided data """
+        if self.verbose:
+            print "# EM algorithm to train model", self.label
+
         if self.means is None or self.cov is None:
             err = "Gaussian Mixture Model should be init before trained"
             raise Exception(err)
