@@ -93,10 +93,8 @@ class GaussianMixtureModel(object):
         bestCentroids = centroids[fs.argmin()]
         self.K = len(bestCentroids)
         self.means = np.array(bestCentroids)
-        print fs
-        print self.K
 
-    def calculateClusterCoherence(self, K, Skm1=0):
+    def calculateClusterCoherence(self, K, Skm1=0, maxIter=3):
         """
         Return the result of the f(K) function with associated means
         """
@@ -108,15 +106,23 @@ class GaussianMixtureModel(object):
                 return alphaK(k-1, Nd) + (1 - alphaK(k - 1, Nd))/6
 
         data = self.trainingData
-        members, centroids = KMeans.kmeans(data, K)
-        Sk = KMeans.getIntraClusterVariance(data, members, centroids)
+
+        means = None
+        Sk = None
+        for i in range(maxIter):
+            members, centroids = KMeans.kmeans(data, K)
+            trySk = KMeans.getIntraClusterVariance(data, members, centroids)
+            if (Sk is None or trySk < Sk):
+                Sk = trySk
+                means = centroids
+
         if K == 1:
             fs = 1
         elif Skm1 == 0:
             fs = 1
         else:
             fs = Sk / (alphaK(K, self.d) * Skm1)
-        return fs, Sk, centroids
+        return fs, Sk, means
 
     def getRandomInitMeans(self):
         """ Draw K random sample as initial means for the EM algo
