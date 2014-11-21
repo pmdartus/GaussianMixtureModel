@@ -163,7 +163,7 @@ class GaussianMixtureModel(object):
             print "    Use `Random` method to init model"
         self.means = random.sample(self.trainingData, self.K)
 
-    def getInitKMeans(self, nbIter=10):
+    def getInitKMeans(self, nbIter=3):
         """ Use KMeans to guess intial values of means
 
         Update self.means

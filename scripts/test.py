@@ -42,10 +42,11 @@ def getFileLength(f):
 
 def main(trainingData, testData, csv):
     nbSamples = getFileLength(testData)
-    methods = ["Guess", "Random", "K-Means"]
+    # methods = ["Guess", "Random", "K-Means"]
+    methods = ["Guess"]
     for m in methods:
         print "\n#", m
-        for i in range(20):
+        for i in range(4):
             print".",
             res = executeCmd(trainingData, testData, method=m)
             if res[2] is not None:
