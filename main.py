@@ -27,13 +27,23 @@ def main():
         '--dimension',
         help='Number of dimentional feature',
         required=False,
+        type=int,
         default=2
     )
     parser.add_argument(
+        '-m',
         '--initMethod',
-        help='Election method for initials means `Random` or `K-Means`',
+        help='Election method for initials means `Random` `K-Means` or `Guess`',
         required=False,
-        default="K-Means"
+        default="Guess"
+    )
+    parser.add_argument(
+        '-K',
+        '--nbCluster',
+        help='Nb components for each mixtures',
+        required=False,
+        type=int,
+        default=4
     )
     parser.add_argument(
         '-v',
@@ -56,7 +66,10 @@ def main():
     for label in dataStore.keys():
         model = GaussianMixtureModel(dataStore[label], label,
                                      verbose=args.verbose)
-        model.initModel(args.initMethod, K=4)
+        if args.initMethod == "Guess":
+            model.initModel(args.initMethod, guessK=True)
+        else:
+            model.initModel(args.initMethod, K=args.nbCluster)
         model.train()
         models.append(model)
         if args.verbose:
